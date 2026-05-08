@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Mess Manager"/>
+  <meta name="theme-color" content="#0d1117"/>
+  <link rel="manifest" href="manifest.json"/>
+  <title>Mess Manager</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    input,select,button{font-family:inherit}
+    .toast{position:fixed;top:16px;right:16px;background:#238636;color:#fff;padding:10px 18px;border-radius:8px;z-index:9999;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:opacity .3s}
+    .toast.hide{opacity:0;pointer-events:none}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px}
+    .lock-banner{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#f85149;margin-bottom:14px}
+    table{width:100%;border-collapse:collapse}
+    th{padding:8px 12px;text-align:left;color:#8b949e;font-weight:600;font-size:12px;border-bottom:1px solid #30363d}
+    td{padding:8px 12px;color:#c9d1d9;font-size:12px}
+    .sel{background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:6px 10px;font-size:13px}
+    .inp{background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:6px 10px;font-size:13px;outline:none}
+    .btn-p{background:#238636;border:1px solid #3fb950;border-radius:6px;color:#fff;padding:7px 16px;cursor:pointer;font-size:13px;font-weight:600}
+    .btn-g{background:transparent;border:1px solid #30363d;border-radius:6px;color:#8b949e;padding:6px 12px;cursor:pointer;font-size:12px}
+    .btn-d{background:rgba(248,81,73,.1);border:none;border-radius:5px;color:#f85149;cursor:pointer;padding:2px 6px;font-size:11px}
+    .tabs{background:#161b22;border-bottom:1px solid #30363d;display:flex;overflow-x:auto}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{padding:11px 14px;background:none;border:none;border-bottom:2px solid transparent;color:#8b949e;cursor:pointer;font-size:12px;white-space:nowrap}
+    .tab.on{border-bottom-color:#58a6ff;color:#58a6ff}
+    .hdr{background:#161b22;border-bottom:1px solid #30363d;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50}
+    .con{padding:16px;max-width:960px;margin:0 auto}
+    .sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+    .sdot.on{background:#3fb950}
+    .sdot.sy{background:#fbbf24;animation:pu 1s infinite}
+    .sdot.of{background:#f85149}
+    @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+    .mbtn{width:26px;height:26px;border-radius:5px;border:none;font-size:11px;font-weight:700;cursor:pointer}
+    .ftag{border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;display:inline-block;margin:2px}
+    .ftag.pr{background:rgba(251,146,60,.15);border:1px solid rgba(251,146,60,.4);color:#fb923c}
+    .ftag.ot{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.4);color:#4ade80}
+    .fpill{border-radius:20px;font-size:11px;padding:4px 10px;cursor:pointer;border:1px solid transparent}
+    .fpill.pr{border-color:rgba(251,146,60,.3);background:rgba(251,146,60,.05);color:#a16207}
+    .fpill.pr.sl{border-color:#fb923c;background:rgba(251,146,60,.2);color:#fb923c;font-weight:600}
+    .fpill.ot{border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.04);color:#166534}
+    .fpill.ot.sl{border-color:#4ade80;background:rgba(74,222,128,.15);color:#4ade80;font-weight:600}
+    .npill{padding:5px 10px;border-radius:6px;font-weight:700;font-size:13px;text-align:center}
+    .npill.ow{background:rgba(248,81,73,.12);color:#f85149;border:1px solid rgba(248,81,73,.25)}
+    .npill.rf{background:rgba(63,185,80,.12);color:#3fb950;border:1px solid rgba(63,185,80,.25)}
+    .ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+    .mo{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;max-width:340px;width:100%}
+    .stk{position:sticky;left:0;z-index:2;box-shadow:2px 0 6px rgba(0,0,0,.5)}
+  </style>
+</head>
+<body>
+<div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px">
+  <div style="font-size:48px">🏠</div>
+  <div style="font-size:22px;font-weight:700;color:#58a6ff">Mess Manager</div>
+  <div style="color:#8b949e;font-size:14px">Who are you?</div>
+  <div id="lbtns" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px"></div>
+</div>
+<div id="app" style="display:none">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:17px;font-weight:700;color:#58a6ff">🏠 Mess</span>
+      <span id="ss" style="font-size:11px;color:#8b949e"><span class="sdot sy"></span>Connecting…</span>
+      <span id="lkbdg" style="display:none;font-size:11px;background:rgba(248,81,73,.13);color:#f85149;border:1px solid rgba(248,81,73,.3);padding:2px 8px;border-radius:20px">🔒</span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <select id="msel" class="sel" style="font-size:12px;padding:4px 8px"></select>
+      <select id="ysel" class="sel" style="font-size:12px;padding:4px 8px"></select>
+      <button id="ubtn" class="btn-g" style="font-size:12px"></button>
+      <button id="lkbtn" class="btn-g" style="display:none;color:#f85149;border-color:rgba(248,81,73,.3);font-size:12px">🔒</button>
+    </div>
+  </div>
+  <div class="tabs" id="tbr"></div>
+  <div class="con" id="mc"></div>
+</div>
+<div id="toast" class="toast hide"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getDatabase,ref,onValue,set}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const FB={apiKey:"AIzaSyA8wbB6Ojau2jyE5dKIIXLuU5YzG_vNgGc",authDomain:"messmanager-9170e.firebaseapp.com",databaseURL:"https://messmanager-9170e-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"messmanager-9170e",storageBucket:"messmanager-9170e.firebasestorage.app",messagingSenderId:"946844459912",appId:"1:946844459912:web:59e79f693d3fe935ca103d"};
+const fapp=initializeApp(FB);
+const db=getDatabase(fapp);
+
+const MEMBERS=["Raihan","Rahat","Tonmoy","Al Amin"];
+const MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MC={Raihan:"#60a5fa",Rahat:"#34d399",Tonmoy:"#fbbf24","Al Amin":"#f472b6"};
+const MB={Raihan:"rgba(96,165,250,.1)",Rahat:"rgba(52,211,153,.1)",Tonmoy:"rgba(251,191,36,.1)","Al Amin":"rgba(244,114,182,.1)"};
+const PFOODS=["Pangas","Pabda","Rohu","Mrigel","Telapia","Climbing Perch","Hilsa","Chicken","Egg"];
+const TABS=[{id:"meals",l:"🍽 Meals"},{id:"grocery",l:"🛒 Grocery"},{id:"expenses",l:"📋 Expenses"},{id:"rotations",l:"🔄 Rotations"},{id:"statement",l:"📊 Statement"},{id:"history",l:"📈 History"},{id:"yearly",l:"📆 Yearly"}];
+
+let CU=localStorage.getItem("mess_user")||"";
+let TAB="meals";
+let VY=new Date().getFullYear();
+let VM=new Date().getMonth();
+let AD={};
+let FC={};
+let PD=null; // food picker day
+
+const td=new Date();
+
+function dim(y,m){return new Date(y,m+1,0).getDate();}
+function fBDT(n){if(!n&&n!==0)return"৳0.00";const a=Math.abs(n);return(n<0?"-":"")+"৳"+a.toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function mk(y,m){return`${y}_${m}`;}
+function gmd(){return AD[mk(VY,VM)]||blankM();}
+function locked(){return gmd().locked||false;}
+function isCM(){return VY===td.getFullYear()&&VM===td.getMonth();}
+function apf(){return[...PFOODS,...(FC.cp||[])].filter(f=>!(FC.ex||[]).includes(f));}
+function aof(){return(FC.cf||[]).filter(f=>!(FC.cp||[]).includes(f)&&!(FC.ex||[]).includes(f));}
+function isPr(f){return[...PFOODS,...(FC.cp||[])].map(x=>x.toLowerCase()).includes(f.toLowerCase());}
+
+function blankM(){
+  const meals={};
+  for(let d=1;d<=31;d++){meals[d]={counts:{},note:"",manager:"",closed:false};MEMBERS.forEach(m=>meals[d].counts[m]=0);}
+  const contributions={};MEMBERS.forEach(m=>contributions[m]=[]);
+  return{meals,contributions,expenses:[
+    {id:"e1",particulars:"Cook's Salary",amount:2400,paidBy:"",status:"unpaid"},
+    {id:"e2",particulars:"Broadband",amount:500,paidBy:"",status:"unpaid"},
+    {id:"e3",particulars:"Garbage",amount:100,paidBy:"",status:"unpaid"},
+  ],locked:false,settlements:{}};
+}
+
+function calc(data,y,m){
+  if(!data)return null;
+  const days=dim(y,m);
+  const{meals,contributions,expenses}=data;
+  const tm={};
+  MEMBERS.forEach(mem=>{tm[mem]=0;for(let d=1;d<=days;d++){if(!meals[d]?.closed)tm[mem]+=(meals[d]?.counts?.[mem]||0);}});
+  const gt=MEMBERS.reduce((s,x)=>s+tm[x],0);
+  const mg=mem=>(contributions[mem]||[]).reduce((s,c)=>s+Number(c.amount||0),0);
+  const tg=MEMBERS.reduce((s,x)=>s+mg(x),0);
+  const mr=gt>0?tg/gt:0;
+  const ec={};MEMBERS.forEach(m=>ec[m]=0);
+  (expenses||[]).forEach(e=>{if(e.paidBy&&MEMBERS.includes(e.paidBy)&&e.status==="paid")ec[e.paidBy]+=Number(e.amount||0);});
+  const to=(expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+  const up=MEMBERS.length?to/MEMBERS.length:0;
+  const rows=MEMBERS.map(mem=>{
+    const di=mr*tm[mem],ut=up,gr=mg(mem),ex=ec[mem]||0,co=gr+ex,nt=di+ut-co;
+    return{mem,meals:tm[mem],dining:di,utility:ut,grocery:gr,expCredit:ex,contributed:co,net:nt};
+  });
+  return{totalMeals:tm,grandTotal:gt,totalGrocery:tg,mealRate:mr,expCredit:ec,totalOther:to,utilityPerPerson:up,rows};
+}
+
+// Firebase
+function ss(st){
+  const el=document.getElementById("ss");if(!el)return;
+  const d=`<span class="sdot ${st}"></span>`;
+  el.innerHTML=d+(st==="on"?"Synced":st==="sy"?"Syncing…":"Offline");
+}
+async function fbS(path,val){
+  ss("sy");
+  try{await set(ref(db,path),val);ss("on");}
+  catch{ss("of");toast("⚠️ Sync failed");}
+}
+
+function subscribe(){
+  onValue(ref(db,"messData"),s=>{AD=s.val()||{};ss("on");render();});
+  onValue(ref(db,"foodConfig"),s=>{FC=s.val()||{};render();});
+}
+
+// Actions
+async function setMeal(day,mem,val){
+  if(locked()){toast("Month is locked 🔒");return;}
+  await fbS(`messData/${mk(VY,VM)}/meals/${day}/counts/${mem}`,val);
+}
+async function setDF(day,field,val){
+  if(locked()&&field!=="closed"){toast("Month is locked 🔒");return;}
+  await fbS(`messData/${mk(VY,VM)}/meals/${day}/${field}`,val);
+}
+async function togClosed(day){
+  if(locked()){toast("Month is locked 🔒");return;}
+  const cur=gmd().meals[day]?.closed||false;
+  await fbS(`messData/${mk(VY,VM)}/meals/${day}/closed`,!cur);
+}
+async function addC(mem,df,dt,amt){
+  if(locked()){toast("Month is locked 🔒");return;}
+  const k=mk(VY,VM);
+  const cur=(AD[k]?.contributions?.[mem])||[];
+  await fbS(`messData/${k}/contributions/${mem}`,[...cur,{id:Date.now().toString(),dateFrom:df,dateTo:dt,amount:amt}]);
+  toast("Contribution added ✓");
+}
+async function remC(mem,id){
+  if(locked()){toast("Month is locked 🔒");return;}
+  const k=mk(VY,VM);
+  await fbS(`messData/${k}/contributions/${mem}`,(AD[k]?.contributions?.[mem]||[]).filter(c=>c.id!==id));
+}
+async function addE(p,a,pb,st){
+  if(locked()){toast("Month is locked 🔒");return;}
+  const k=mk(VY,VM);const cur=AD[k]?.expenses||[];
+  await fbS(`messData/${k}/expenses`,[...cur,{id:Date.now().toString(),particulars:p,amount:a,paidBy:pb,status:st}]);
+  toast("Expense added ✓");
+}
+async function remE(id){
+  if(locked()){toast("Month is locked 🔒");return;}
+  const k=mk(VY,VM);
+  await fbS(`messData/${k}/expenses`,(AD[k]?.expenses||[]).filter(e=>e.id!==id));
+}
+async function updE(id,field,val){
+  const k=mk(VY,VM);
+  await fbS(`messData/${k}/expenses`,(AD[k]?.expenses||[]).map(e=>e.id===id?{...e,[field]:val}:e));
+}
+async function setSt(mem,val){
+  await fbS(`messData/${mk(VY,VM)}/settlements/${mem}`,val);
+  toast(val==="settled"?`${mem} settled ✓`:`${mem} pending`);
+}
+async function doLock(){
+  await fbS(`messData/${mk(VY,VM)}/locked`,true);
+  toast("Month locked 🔒");render();
+}
+async function addFood(name,type){
+  const t=name.trim();if(!t)return;
+  const cf=FC.cf||[];
+  if(cf.map(f=>f.toLowerCase()).includes(t.toLowerCase())){toast("Already exists");return;}
+  await fbS("foodConfig/cf",[...cf,t]);
+  if(type==="protein"){const cp=FC.cp||[];await fbS("foodConfig/cp",[...cp,t]);}
+  toast(`"${t}" added ✓`);
+}
+async function exFood(food){
+  await fbS("foodConfig/ex",[...(FC.ex||[]),food]);toast(`"${food}" removed ✓`);
+}
+async function reFood(food){
+  await fbS("foodConfig/ex",(FC.ex||[]).filter(f=>f!==food));toast(`"${food}" restored ✓`);
+}
+async function togFood(day,food){
+  const dd=gmd().meals[day]||{};
+  const cur=(dd.note||"").split(",").map(f=>f.trim()).filter(Boolean);
+  const i=cur.findIndex(f=>f.toLowerCase()===food.toLowerCase());
+  await setDF(day,"note",(i>=0?cur.filter((_,j)=>j!==i):[...cur,food]).join(", "));
+}
+
+// Clipboard
+function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("Copied ✓")).catch(()=>fbCopy(text));}
+  else fbCopy(text);
+}
+function fbCopy(text){
+  const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:-9999px;opacity:0";
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand("copy");toast("Copied ✓");}catch{}
+  document.body.removeChild(ta);
+}
+
+function waText(c,m,y,s){
+  if(!c)return"";
+  return[`🏠 *Mess Statement — ${MN[m]} ${y}*`,`📊 Meal Rate: ${fBDT(c.mealRate)} | Total Meals: ${c.grandTotal}`,``,`*Settlement:*`,
+    ...c.rows.map(r=>`${(s||{})[r.mem]==="settled"?"✅":"🔴"} ${r.mem}: ${r.net>0?`Owes ${fBDT(r.net)}`:`Refund ${fBDT(Math.abs(r.net))}`}`),
+    ``,`_N.B. The contributor should log their data daily._`
+  ].join("\n");
+}
+
+function getPeriods(meals,days){
+  const ps=[];let c=null;
+  for(let d=1;d<=days;d++){
+    const mg=meals[d]?.manager||"";
+    if(!c||c.manager!==mg){if(c){c.end=d-1;ps.push(c);}c={manager:mg,start:d,end:d};}
+    else c.end=d;
+  }
+  if(c){c.end=days;ps.push(c);}return ps;
+}
+
+function downloadPDF(){
+  const d=gmd();const c=calc(d,VY,VM);const s=d.settlements||{};
+  const css=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px}h2{text-align:center;font-size:18px;margin-bottom:4px}h4{text-align:center;color:#555;font-size:13px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:18px}th{background:#1a1a2e;color:#fff;padding:7px 10px;text-align:left;font-size:11px}td{padding:6px 10px;border-bottom:1px solid #ddd;font-size:11px}tr:nth-child(even) td{background:#f7f7f7}.ow{color:#c0392b;font-weight:700}.rf{color:#27ae60;font-weight:700}.se{color:#27ae60}.pe{color:#e67e22}.two{display:flex;gap:20px}.two>div{flex:1}.ft{margin-top:20px;font-size:11px;color:#888;font-style:italic;text-align:center}`;
+  const rows=(c?.rows||[]).map(r=>`<tr><td>${r.mem}</td><td>${r.meals}</td><td>${fBDT(r.dining)}</td><td>${fBDT(r.utility)}</td><td>${fBDT(r.grocery)}</td><td>${fBDT(r.expCredit)}</td><td>${fBDT(r.contributed)}</td><td class="${r.net>0?"ow":"rf"}">${r.net>0?`Owes ${fBDT(r.net)}`:`Refund ${fBDT(Math.abs(r.net))}`}</td><td class="${s[r.mem]==="settled"?"se":"pe"}">${s[r.mem]==="settled"?"✓ Settled":"Pending"}</td></tr>`).join("");
+  const gr=MEMBERS.flatMap(m=>(d.contributions[m]||[]).map(c=>`<tr><td>${m}</td><td>${c.dateFrom}–${c.dateTo} ${MN[VM].slice(0,3)}</td><td>${fBDT(c.amount)}</td></tr>`)).join("");
+  const er=(d.expenses||[]).map(e=>`<tr><td>${e.particulars}</td><td>${fBDT(e.amount)}</td><td>${e.status==="paid"?`✓ ${e.paidBy}`:"Unpaid"}</td></tr>`).join("");
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Mess ${MN[VM]} ${VY}</title><style>${css}</style></head><body>
+<h2>🏠 Monthly Mess Statement</h2><h4>${MN[VM]} ${VY}</h4>
+<table><thead><tr><th>Name</th><th>Meals</th><th>Dining</th><th>Utility</th><th>Grocery</th><th>Exp.Paid</th><th>Contributed</th><th>Net</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="two"><div><h3 style="margin-bottom:8px">Grocery Log</h3><table><thead><tr><th>Member</th><th>Period</th><th>Amount</th></tr></thead><tbody>${gr}<tr><td colspan="2"><b>Total</b></td><td><b>${fBDT(c?.totalGrocery)}</b></td></tr></tbody></table></div>
+<div><h3 style="margin-bottom:8px">Other Expenses</h3><table><thead><tr><th>Particulars</th><th>Amount</th><th>Status</th></tr></thead><tbody>${er}<tr><td><b>Total</b></td><td><b>${fBDT(c?.totalOther)}</b></td><td></td></tr></tbody></table></div></div>
+<p class="ft">Meal Rate: ${fBDT(c?.mealRate)} | N.B. The contributor should log their data daily.</p></body></html>`;
+  const bl=new Blob([html],{type:"text/html"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download=`Mess_${MN[VM]}_${VY}.html`;a.click();
+  toast("Downloaded! Open the file → Print → Save as PDF ✓");
+}
+
+// Toast
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hide");
+  clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.add("hide"),2500);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render(){
+  if(!CU){rLogin();return;}
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  rHeader();rTabs();rContent();
+}
+
+function rLogin(){
+  document.getElementById("login").style.display="flex";
+  document.getElementById("app").style.display="none";
+  document.getElementById("lbtns").innerHTML=MEMBERS.map(m=>`<button onclick="W.su('${m}')" style="padding:14px 20px;background:${MB[m]};border:1px solid ${MC[m]}55;border-radius:10px;color:${MC[m]};font-size:16px;font-weight:600;cursor:pointer">${m}</button>`).join("");
+}
+
+function rHeader(){
+  const ms=document.getElementById("msel");
+  if(!ms.innerHTML)MN.forEach((n,i)=>ms.innerHTML+=`<option value="${i}">${n}</option>`);
+  ms.value=VM;ms.onchange=e=>{VM=Number(e.target.value);render();};
+  const ys=document.getElementById("ysel");
+  if(!ys.innerHTML)[2024,2025,2026,2027].forEach(y=>ys.innerHTML+=`<option value="${y}">${y}</option>`);
+  ys.value=VY;ys.onchange=e=>{VY=Number(e.target.value);render();};
+  const ub=document.getElementById("ubtn");ub.textContent=`👤 ${CU}`;ub.style.color=MC[CU];ub.style.borderColor=MC[CU]+"55";ub.onclick=()=>W.showUP();
+  document.getElementById("lkbdg").style.display=locked()?"inline":"none";
+  const lb=document.getElementById("lkbtn");lb.style.display=(!locked()&&isCM())?"inline":"none";lb.onclick=()=>W.showLC();
+}
+
+function rTabs(){
+  document.getElementById("tbr").innerHTML=TABS.map(t=>`<button class="tab${TAB===t.id?" on":""}" onclick="W.st('${t.id}')">${t.l}</button>`).join("");
+}
+
+function rContent(){
+  const mc=document.getElementById("mc");
+  if(TAB==="meals")mc.innerHTML=rMeals();
+  else if(TAB==="grocery")mc.innerHTML=rGrocery();
+  else if(TAB==="expenses")mc.innerHTML=rExpenses();
+  else if(TAB==="rotations")mc.innerHTML=rRotations();
+  else if(TAB==="statement")mc.innerHTML=rStatement();
+  else if(TAB==="history")mc.innerHTML=rHistory();
+  else if(TAB==="yearly")mc.innerHTML=rYearly();
+}
+
+// ── MEALS ─────────────────────────────────────────────────────────────────
+function rMeals(){
+  const d=gmd();const days=dim(VY,VM);
+  const dd2={};MEMBERS.forEach(m=>(d.contributions[m]||[]).forEach(c=>{for(let x=Number(c.dateFrom);x<=Number(c.dateTo);x++)dd2[x]=m;}));
+  let rows="";
+  for(let day=1;day<=days;day++){
+    const m=d.meals[day]||{counts:{},note:"",manager:"",closed:false};
+    const isT=VY===td.getFullYear()&&VM===td.getMonth()&&day===td.getDate();
+    const cl=m.closed||false;
+    const bg=cl?"#1a0e0e":isT?"#0d1f33":day%2===0?"#0d1117":"#161b22";
+    const dc=cl?"#f85149":isT?"#58a6ff":"#8b949e";
+    const dateTd=`<td class="stk" style="background:${bg};padding:8px 6px;width:52px;white-space:nowrap"><span onclick="W.tc(${day})" style="color:${dc};font-weight:${isT?700:600};cursor:pointer;text-decoration:${cl?"line-through":"none"};user-select:none;font-size:12px">${isT?"▶ ":""}${day} ${MN[VM].slice(0,3)}</span></td>`;
+    const mbtns=MEMBERS.map(mem=>{
+      const v=m.counts?.[mem]||0;
+      const bs=[0,1,2,3].map(n=>`<button class="mbtn" onclick="W.sm(${day},'${mem}',${n})" style="background:${v===n?(n===0?"#21262d":MC[mem]+"44"):"#0d1117"};color:${v===n?(n===0?"#8b949e":MC[mem]):"#30363d"};outline:${v===n&&n>0?`1px solid ${MC[mem]}`:"none"};${cl?"opacity:.3":""}" ${(cl||locked())?"disabled":""}>${n}</button>`).join("");
+      return`<td style="text-align:center;padding:6px">${bs}</td>`;
+    }).join("");
+    const dist=dd2[day]||"";
+    const db=dist?`<span style="background:${MB[dist]};border:1px solid ${MC[dist]}44;border-radius:20px;padding:2px 8px;font-size:10px;color:${MC[dist]}">${dist}</span>`:`<span style="color:#484f58;font-size:11px">—</span>`;
+    const foods=(m.note||"").split(",").map(f=>f.trim()).filter(Boolean);
+    const ftags=foods.map(f=>`<span class="ftag ${isPr(f)?"pr":"ot"}" onclick="${(locked()||cl)?"":` W.tf(${day},'${f}')`}">${f} ×</span>`).join("");
+    const fab=(!locked()&&!cl)?`<button onclick="W.op(${day})" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px dashed #30363d;background:transparent;color:#58a6ff;cursor:pointer">+ food</button>`:"";
+    const fpk=PD===day?rFoodPicker(day,m.note||""):"";
+    rows+=`<tr style="background:${bg};border-bottom:1px solid ${cl?"#f8514922":isT?"#58a6ff44":"#21262d"}">${dateTd}${mbtns}<td style="padding:6px 8px">${db}</td><td style="padding:6px 8px;min-width:180px">${ftags}${fab}${fpk}</td></tr>`;
+  }
+  const c=calc(d,VY,VM);
+  const tr=`<tr style="background:#1c2128;border-top:2px solid #58a6ff55"><td class="stk" style="background:#1c2128;padding:8px 6px;font-weight:700;color:#58a6ff;font-size:12px">Total</td>${MEMBERS.map(m=>`<td style="text-align:center;padding:6px;font-weight:700;color:${MC[m]}">${c?.totalMeals[m]||0}</td>`).join("")}<td colspan="2" style="padding:6px 8px;color:#8b949e">Total: ${c?.grandTotal||0} | Rate: ${fBDT(c?.mealRate)}</td></tr>`;
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">Daily Meal Entry — ${MN[VM]} ${VY}</div>
+${locked()?'<div class="lock-banner">🔒 Locked. Viewing only.</div>':""}
+<div style="overflow-x:auto"><table><thead><tr style="background:#161b22"><th class="stk" style="background:#161b22;padding:8px 6px;width:52px">Date</th>${MEMBERS.map(m=>`<th style="color:${MC[m]};text-align:center">${m}</th>`).join("")}<th>Distributor</th><th style="min-width:200px">Food Served</th></tr></thead><tbody>${rows}${tr}</tbody></table></div>`;
+}
+
+function rFoodPicker(day,noteStr){
+  const sel=noteStr.split(",").map(f=>f.trim()).filter(Boolean);
+  const ex=FC.ex||[];
+  const plist=[...PFOODS,...(FC.cp||[])].filter(f=>!ex.includes(f));
+  const olist=(FC.cf||[]).filter(f=>!(FC.cp||[]).includes(f)&&!ex.includes(f));
+  const pill=(type,list)=>list.map(food=>{const s=sel.some(f=>f.toLowerCase()===food.toLowerCase());return`<span style="display:inline-flex;align-items:center;margin:2px"><button class="fpill ${type}${s?" sl":""}" onclick="W.tf(${day},'${food}')">${food}</button><button onclick="W.ef('${food}')" style="font-size:9px;padding:3px 5px;border-radius:0 20px 20px 0;border:1px solid rgba(150,150,150,.2);background:transparent;color:#484f58;cursor:pointer;margin-left:-1px">✕</button></span>`;}).join("");
+  const excl=ex.length?`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #21262d"><div style="font-size:10px;color:#484f58;margin-bottom:4px">Excluded:</div>${ex.map(f=>`<button onclick="W.rf('${f}')" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid #30363d;background:#21262d;color:#484f58;cursor:pointer;text-decoration:line-through;margin:2px">${f}</button>`).join("")}</div>`:"";
+  return`<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;margin-top:4px">
+<div style="font-size:10px;margin-bottom:6px"><span style="color:#fb923c;font-weight:600">🟠 Protein</span><span style="margin-left:10px;color:#4ade80;font-weight:600">🟢 Others</span></div>
+<div style="margin-bottom:8px">${pill("pr",plist)}${pill("ot",olist)}</div>
+${excl}
+<div style="border-top:1px solid #21262d;padding-top:8px">
+<div style="font-size:10px;color:#8b949e;margin-bottom:5px">Add new food:</div>
+<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+<input id="nfi" placeholder="Food name…" style="flex:1;min-width:90px;padding:4px 8px;font-size:11px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3" onkeydown="if(event.key==='Enter')W.anf(${day})"/>
+<select id="nft" style="padding:4px 6px;font-size:11px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3"><option value="protein">🟠 Protein</option><option value="supp">🟢 Others</option></select>
+<button class="btn-p" onclick="W.anf(${day})" style="padding:4px 10px;font-size:11px">Add</button>
+<button class="btn-g" onclick="W.cp2()" style="padding:4px 8px;font-size:11px">Done</button>
+</div></div></div>`;
+}
+
+// ── GROCERY ───────────────────────────────────────────────────────────────
+function rGrocery(){
+  const d=gmd();const c=calc(d,VY,VM);const days=dim(VY,VM);
+  const pad=n=>String(n).padStart(2,"0");
+  const fp=`${VY}-${pad(VM+1)}-01`,lp=`${VY}-${pad(VM+1)}-${pad(days)}`;
+  const form=!locked()?`<div class="card" style="margin-bottom:14px"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:10px">Add Contribution</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Member</div><select id="gcm" class="sel">${MEMBERS.map(m=>`<option>${m}</option>`).join("")}</select></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">From</div><input type="date" id="gcf" class="inp" style="width:145px" value="${fp}" min="${fp}" max="${lp}"/></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">To</div><input type="date" id="gct" class="inp" style="width:145px" value="${lp}" min="${fp}" max="${lp}"/></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Amount (৳)</div><input type="number" id="gca" class="inp" style="width:100px" placeholder="0"/></div>
+<button class="btn-p" onclick="W.ac()">+ Add</button>
+</div></div>`:"";
+  const cards=MEMBERS.map(mem=>{
+    const cs=d.contributions[mem]||[];const gr=c?.rows.find(r=>r.mem===mem)?.grocery||0;
+    const items=cs.length?cs.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px"><span style="color:#8b949e">${x.dateFrom}–${x.dateTo} ${MN[VM].slice(0,3)}</span><span style="color:#e6edf3;font-weight:600">${fBDT(x.amount)}</span>${!locked()?`<button class="btn-d" onclick="W.rc('${mem}','${x.id}')">✕</button>`:""}</div>`).join(""):`<div style="color:#8b949e;font-size:12px">No contributions</div>`;
+    return`<div class="card" style="border-left:3px solid ${MC[mem]}"><div style="font-weight:700;color:${MC[mem]};margin-bottom:10px">${mem}</div>${items}<div style="border-top:1px solid #30363d;margin-top:8px;padding-top:8px;font-weight:700;color:${MC[mem]};font-size:13px">${fBDT(gr)}</div></div>`;
+  }).join("");
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">Grocery Contributions</div>${locked()?'<div class="lock-banner">🔒 Locked.</div>':""}${form}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${cards}</div><div style="margin-top:12px;text-align:right;color:#58a6ff;font-weight:700">Grand Total: ${fBDT(c?.totalGrocery)}</div>`;
+}
+
+// ── EXPENSES ──────────────────────────────────────────────────────────────
+function rExpenses(){
+  const d=gmd();const c=calc(d,VY,VM);
+  const rows=(d.expenses||[]).map(e=>`<tr style="border-bottom:1px solid #21262d">
+<td>${e.particulars}</td>
+<td><input type="number" value="${e.amount}" onchange="W.ue('${e.id}','amount',Number(this.value))" ${locked()?"disabled":""} style="width:90px;padding:4px 8px;font-size:13px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#fbbf24;font-weight:600"/></td>
+<td><select onchange="W.ue('${e.id}','paidBy',this.value)" ${locked()?"disabled":""} class="sel" style="font-size:12px;padding:4px 8px"><option value="" ${!e.paidBy?"selected":""}>— Not paid —</option>${MEMBERS.map(m=>`<option ${e.paidBy===m?"selected":""}>${m}</option>`).join("")}</select></td>
+<td><select onchange="W.ue('${e.id}','status',this.value)" ${locked()?"disabled":""} class="sel" style="font-size:12px;padding:4px 8px;color:${e.status==="paid"?"#3fb950":"#f85149"}"><option value="unpaid" ${e.status!=="paid"?"selected":""}>Unpaid</option><option value="paid" ${e.status==="paid"?"selected":""}>Paid ✓</option></select></td>
+<td>${!locked()?`<button class="btn-d" onclick="W.re('${e.id}')">✕</button>`:""}</td></tr>`).join("");
+  const form=!locked()?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid #30363d">
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Particulars</div><input id="ep" class="inp" placeholder="e.g. Internet" style="width:130px"/></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Amount (৳)</div><input type="number" id="ea" class="inp" placeholder="0" style="width:90px"/></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Paid By</div><select id="epb" class="sel"><option value="">—</option>${MEMBERS.map(m=>`<option>${m}</option>`).join("")}</select></div>
+<div><div style="font-size:11px;color:#8b949e;margin-bottom:4px">Status</div><select id="est" class="sel"><option value="unpaid">Unpaid</option><option value="paid">Paid ✓</option></select></div>
+<button class="btn-p" onclick="W.ae()">+ Add</button></div>`:"";
+  const cr=MEMBERS.filter(m=>(c?.expCredit[m]||0)>0);
+  const cb=cr.length?`<div class="card" style="margin-top:14px;border-left:3px solid #3fb950"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:8px">Credits applied</div>${cr.map(m=>`<div style="font-size:13px;margin-top:6px;color:#8b949e"><span style="color:${MC[m]}">${m}</span> → <span style="color:#3fb950;font-weight:600">${fBDT(c.expCredit[m])}</span></div>`).join("")}</div>`:"";
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">Other Expenses</div>${locked()?'<div class="lock-banner">🔒 Locked.</div>':""}
+<div class="card"><table><thead><tr>${["Particulars","Amount","Paid By","Status",""].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>${form}</div>${cb}`;
+}
+
+// ── ROTATIONS ─────────────────────────────────────────────────────────────
+function rRotations(){
+  const d=gmd();const days=dim(VY,VM);
+  const ps=getPeriods(d.meals,days);
+  const cards=ps.map(p=>{
+    let pm=0;for(let x=p.start;x<=p.end;x++)MEMBERS.forEach(m=>pm+=(d.meals[x]?.closed?0:(d.meals[x]?.counts?.[m]||0)));
+    let pg=0;MEMBERS.forEach(m=>(d.contributions[m]||[]).forEach(c=>{if(Number(c.dateFrom)<=p.end&&Number(c.dateTo)>=p.start)pg+=Number(c.amount||0);}));
+    const rate=pm>0?pg/pm:0;
+    const notes=[];for(let x=p.start;x<=p.end;x++)if(d.meals[x]?.note)notes.push({day:x,note:d.meals[x].note});
+    const cs=[];MEMBERS.forEach(m=>(d.contributions[m]||[]).forEach(c=>{if(Number(c.dateFrom)<=p.end&&Number(c.dateTo)>=p.start)cs.push({mem:m,c});}));
+    const col=p.manager?MC[p.manager]:"#30363d";
+    const mm=MEMBERS.map(m=>{let cnt=0;for(let x=p.start;x<=p.end;x++)cnt+=(d.meals[x]?.closed?0:(d.meals[x]?.counts?.[m]||0));return`<div style="background:#0d1117;border-radius:8px;padding:6px 12px;font-size:12px"><span style="color:${MC[m]}">${m}</span><span style="color:#8b949e;margin-left:6px">${cnt} meals</span><span style="color:#58a6ff;margin-left:6px">${fBDT(rate*cnt)}</span></div>`;}).join("");
+    const ct=cs.map(({mem,c})=>`<span style="background:${MC[mem]}22;border:1px solid ${MC[mem]}44;border-radius:6px;padding:3px 10px;font-size:11px;color:${MC[mem]}">${mem}: ${fBDT(c.amount)}</span>`).join("");
+    const nt=notes.length?`<div style="margin-top:10px;background:#0d1117;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#8b949e;margin-bottom:4px">🍱 Food served:</div>${notes.map(n=>{const fs=n.note.split(",").map(f=>f.trim()).filter(Boolean);return`<div style="font-size:12px;color:#e6edf3;margin-bottom:4px"><span style="color:#8b949e">Day ${n.day}: </span>${fs.map(f=>`<span class="ftag ${isPr(f)?"pr":"ot"}">${f}</span>`).join("")}</div>`;}).join("")}</div>`:"";
+    return`<div class="card" style="margin-bottom:12px;border-left:3px solid ${col}">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+<div><span style="font-weight:700;color:${col};font-size:15px">${p.manager||"Unassigned"}'s Rotation</span><span style="margin-left:10px;color:#8b949e;font-size:12px">Days ${p.start}–${p.end}</span></div>
+<div style="display:flex;gap:18px">${[["Meals",pm,"#60a5fa"],["Grocery",fBDT(pg),"#34d399"],["Rate/Meal",fBDT(rate),"#f472b6"]].map(([l,v,c])=>`<div style="text-align:center"><div style="font-size:10px;color:#8b949e">${l}</div><div style="font-size:14px;font-weight:700;color:${c}">${v}</div></div>`).join("")}</div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${mm}</div>
+${cs.length?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${ct}</div>`:""}
+${nt}</div>`;
+  }).join("");
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">Rotations & Meal Rates</div>${cards}`;
+}
+
+// ── STATEMENT ─────────────────────────────────────────────────────────────
+function rStatement(){
+  const d=gmd();const c=calc(d,VY,VM);const s=d.settlements||{};
+  const sc=[["Grocery",fBDT(c?.totalGrocery),"#34d399"],["Meals",c?.grandTotal,"#60a5fa"],["Rate",fBDT(c?.mealRate),"#f472b6"],["Utility/Person",fBDT(c?.utilityPerPerson),"#fbbf24"],["Other Exp.",fBDT(c?.totalOther),"#f85149"]].map(([l,v,col])=>`<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px"><div style="font-size:10px;color:#8b949e">${l}</div><div style="font-size:15px;font-weight:700;color:${col};margin-top:3px">${v}</div></div>`).join("");
+  const mc=(c?.rows||[]).map(r=>{const st=s[r.mem]==="settled";return`<div class="card" style="border-top:3px solid ${MC[r.mem]};${st?"opacity:.75":""}">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-weight:700;color:${MC[r.mem]};font-size:15px">${r.mem}</div><div style="font-size:11px;color:#8b949e">${r.meals} meals</div></div>
+<div class="npill ${r.net>0?"ow":"rf"}" style="margin-bottom:10px"><div style="font-size:11px;margin-bottom:2px">${r.net>0?"Owes":"Refund"}</div><div style="font-size:20px">${fBDT(Math.abs(r.net))}</div></div>
+<button onclick="W.ss2('${r.mem}','${st?"pending":"settled"}')" style="width:100%;padding:8px;border-radius:7px;border:1px solid ${st?"#3fb95066":"#30363d"};background:${st?"rgba(63,185,80,.1)":"#21262d"};color:${st?"#3fb950":"#8b949e"};font-size:13px;font-weight:600;cursor:pointer">${st?"✓ Settled":"Mark as Settled"}</button>
+</div>`;}).join("");
+  const tr=(c?.rows||[]).map(r=>{const st=s[r.mem]==="settled";return`<tr style="border-bottom:1px solid #21262d;${st?"opacity:.6":""}"><td style="color:${MC[r.mem]};font-weight:700">${r.mem}</td><td style="text-align:center">${r.meals}</td><td>${fBDT(r.dining)}</td><td>${fBDT(r.utility)}</td><td style="color:#8b949e">${fBDT(r.grocery)}</td><td style="color:${r.expCredit>0?"#3fb950":"#4a4f57"}">${fBDT(r.expCredit)}</td><td style="font-weight:600">${fBDT(r.contributed)}</td><td><div class="npill ${r.net>0?"ow":"rf"}" style="margin:2px 4px;padding:4px 8px">${fBDT(Math.abs(r.net))}</div></td><td style="font-size:12px;font-weight:600;color:${st?"#3fb950":"#f85149"}">${st?"✓ Settled":"Pending"}</td></tr>`;}).join("");
+  return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+<div style="font-size:15px;font-weight:700">Statement — ${MN[VM]} ${VY}</div>
+<div style="display:flex;gap:8px">
+<button onclick="W.wa()" style="background:transparent;border:1px solid rgba(63,185,80,.3);border-radius:6px;color:#3fb950;padding:7px 14px;cursor:pointer;font-size:12px">📋 WhatsApp</button>
+<button onclick="W.pdf()" class="btn-p" style="font-size:12px;padding:7px 14px">📄 PDF</button>
+</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${sc}</div>
+<div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:#8b949e"><span>🔴 owes</span><span>🟢 refund</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px">${mc}</div>
+<div class="card" style="overflow-x:auto"><table><thead><tr>${["Name","Meals","Dining","Utility","Grocery","Exp.Paid","Contributed","Net","Status"].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table></div>
+<div style="margin-top:14px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;font-size:11px;color:#8b949e;font-style:italic">N.B. The contributor should log their data daily.</div>`;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────
+function rHistory(){
+  const t=new Date();const months=[];
+  for(let i=0;i<6;i++){let m=t.getMonth()-i,y=t.getFullYear();while(m<0){m+=12;y--;}const k=mk(y,m);const d=AD[k];if(d)months.push({year:y,month:m,key:k,calc:calc(d,y,m),data:d});}
+  if(!months.length)return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">📈 Last 6 Months</div><div style="color:#8b949e">No data yet.</div>`;
+  const chart=months.length>1?`<div class="card" style="margin-bottom:16px"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:8px">Meal Rate Trend</div><div style="display:flex;align-items:flex-end;gap:8px;height:80px;margin-top:8px">${[...months].reverse().map(h=>{const mx=Math.max(...months.map(x=>x.calc?.mealRate||0));const p=mx>0?((h.calc?.mealRate||0)/mx)*100:0;return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="font-size:9px;color:#58a6ff">${fBDT(h.calc?.mealRate)}</div><div style="width:100%;background:#58a6ff;border-radius:4px 4px 0 0;height:${Math.max(p,4)}%"></div><div style="font-size:9px;color:#8b949e">${MN[h.month].slice(0,3)}</div></div>`;}).join("")}</div></div>`:"";
+  const cards=months.map(h=>{
+    const hs=h.data.settlements||{};
+    const freq={};const days=dim(h.year,h.month);
+    for(let d=1;d<=days;d++){const n=h.data.meals[d]?.note||"";n.split(",").map(f=>f.trim().toLowerCase()).filter(Boolean).forEach(f=>freq[f]=(freq[f]||0)+1);}
+    const tf=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const mm=h.calc?.rows.map(r=>{const st=hs[r.mem]==="settled";return`<div style="background:#0d1117;border-radius:8px;padding:10px 14px;font-size:12px;flex:1;min-width:110px;border-left:2px solid ${MC[r.mem]}"><div style="color:${MC[r.mem]};font-weight:700;margin-bottom:4px">${r.mem}</div><div style="color:#8b949e;margin-bottom:2px">${r.meals} meals</div><div style="color:${r.net>0?"#f85149":"#3fb950"};font-weight:700;font-size:13px;margin-bottom:4px">${r.net>0?"Owes ":"Refund "}${fBDT(Math.abs(r.net))}</div><div style="font-size:11px;font-weight:600;color:${st?"#3fb950":"#f85149"}">${st?"✓ Settled":"● Pending"}</div></div>`;}).join("");
+    return`<div class="card" style="margin-bottom:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;color:#e6edf3;font-size:15px">${MN[h.month]} ${h.year}</span>${h.data.locked?'<span style="font-size:11px;background:rgba(248,81,73,.13);color:#f85149;border:1px solid rgba(248,81,73,.3);padding:2px 8px;border-radius:20px">🔒</span>':""}</div>
+<div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:#8b949e">Rate: <b style="color:#f472b6">${fBDT(h.calc?.mealRate)}</b></span>
+<button onclick="W.wam('${h.key}')" class="btn-g" style="font-size:11px;padding:4px 10px;color:#3fb950;border-color:rgba(63,185,80,.3)">📋 WhatsApp</button>
+<button onclick="W.gm(${h.year},${h.month})" class="btn-g" style="font-size:11px;padding:4px 10px">View</button></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;${tf.length?"margin-bottom:12px":""}">${mm}</div>
+${tf.length?`<div style="border-top:1px solid #21262d;padding-top:10px"><div style="font-size:11px;color:#8b949e;margin-bottom:6px">🍱 Most served:</div><div>${tf.map(([f,c])=>`<span style="background:#21262d;border:1px solid #30363d;border-radius:20px;padding:2px 8px;font-size:11px;color:#c9d1d9;margin:2px;display:inline-block">${f} <span style="color:#58a6ff;font-weight:600">×${c}</span></span>`).join("")}</div></div>`:""}
+</div>`;}).join("");
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">📈 Last 6 Months</div>${chart}${cards}`;
+}
+
+// ── YEARLY ────────────────────────────────────────────────────────────────
+function rYearly(){
+  const yd=[];for(let m=0;m<12;m++){const k=mk(VY,m);const d=AD[k];if(d)yd.push({month:m,key:k,calc:calc(d,VY,m),data:d});}
+  if(!yd.length)return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">📆 Yearly — ${VY}</div><div style="color:#8b949e">No data for ${VY}.</div>`;
+  const mt={};MEMBERS.forEach(m=>mt[m]={contributed:0,dining:0,meals:0,net:0});
+  let tgy=0,tmy=0;const ar=[];
+  yd.forEach(h=>{tgy+=h.calc?.totalGrocery||0;tmy+=h.calc?.grandTotal||0;if(h.calc?.mealRate)ar.push(h.calc.mealRate);h.calc?.rows.forEach(r=>{mt[r.mem].contributed+=r.contributed;mt[r.mem].dining+=r.dining;mt[r.mem].meals+=r.meals;mt[r.mem].net+=r.net;});});
+  const avg=ar.length?ar.reduce((s,r)=>s+r,0)/ar.length:0;
+  const top=MEMBERS.reduce((a,b)=>mt[a].contributed>mt[b].contributed?a:b);
+  const af={};yd.forEach(h=>{const days=dim(VY,h.month);for(let d=1;d<=days;d++){const n=h.data.meals[d]?.note||"";n.split(",").map(f=>f.trim().toLowerCase()).filter(Boolean).forEach(f=>af[f]=(af[f]||0)+1);}});
+  const tf=Object.entries(af).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const sc=[["Months",yd.length,"#60a5fa"],["Total Meals",tmy,"#34d399"],["Total Grocery",fBDT(tgy),"#fbbf24"],["Avg Rate",fBDT(avg),"#f472b6"],["Top Contributor",top,MC[top]]].map(([l,v,c])=>`<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 14px;text-align:center;flex:1;min-width:100px"><div style="font-size:10px;color:#8b949e">${l}</div><div style="font-size:14px;font-weight:700;color:${c};margin-top:4px">${v}</div></div>`).join("");
+  const chart=ar.length>1?`<div class="card" style="margin-bottom:16px"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:8px">Monthly Meal Rate</div><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">${yd.map(h=>{const mx=Math.max(...yd.map(x=>x.calc?.mealRate||0));const p=mx>0?((h.calc?.mealRate||0)/mx)*100:0;return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:9px;color:#58a6ff">${fBDT(h.calc?.mealRate)}</div><div style="width:100%;background:#58a6ff;border-radius:4px 4px 0 0;height:${Math.max(p,4)}%"></div><div style="font-size:9px;color:#8b949e">${MN[h.month].slice(0,3)}</div></div>`;}).join("")}</div></div>`:"";
+  const mc=MEMBERS.map(m=>{const t=mt[m];return`<div style="background:#0d1117;border-radius:8px;padding:12px 14px;border-left:3px solid ${MC[m]}"><div style="color:${MC[m]};font-weight:700;font-size:14px;margin-bottom:8px">${m}</div><div style="font-size:12px;color:#8b949e;margin-bottom:3px">Meals: <span style="color:#e6edf3">${t.meals}</span></div><div style="font-size:12px;color:#8b949e;margin-bottom:3px">Dining: <span style="color:#e6edf3">${fBDT(t.dining)}</span></div><div style="font-size:12px;color:#8b949e;margin-bottom:8px">Contributed: <span style="color:${MC[m]};font-weight:600">${fBDT(t.contributed)}</span></div><div class="npill ${t.net>0?"ow":"rf"}" style="font-size:13px">Net: ${fBDT(Math.abs(t.net))} ${t.net>0?"↑":"↓"}</div></div>`;}).join("");
+  const mt2=yd.map(h=>`<tr style="border-bottom:1px solid #21262d"><td style="font-weight:600;color:#e6edf3">${MN[h.month]}</td><td>${h.calc?.grandTotal||0}</td><td style="color:#f472b6">${fBDT(h.calc?.mealRate)}</td>${MEMBERS.map(m=>{const r=h.calc?.rows.find(x=>x.mem===m);return`<td style="color:${(r?.net||0)>0?"#f85149":"#3fb950"};font-weight:600">${fBDT(Math.abs(r?.net||0))}</td>`;}).join("")}</tr>`).join("");
+  const fr=tf.map(([f,c],i)=>`<div style="display:flex;align-items:center;gap:8px;background:#0d1117;border-radius:8px;padding:8px 14px;min-width:120px"><span style="font-size:16px;color:${i===0?"#fbbf24":i===1?"#94a3b8":i===2?"#b45309":"#484f58"}">#${i+1}</span><div><div style="font-size:13px;color:#e6edf3;text-transform:capitalize">${f}</div><div style="font-size:11px;color:#58a6ff">${c}× served</div></div></div>`).join("");
+  return`<div style="font-size:15px;font-weight:700;margin-bottom:14px">📆 Yearly — ${VY}</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">${sc}</div>
+${chart}
+<div class="card" style="margin-bottom:16px"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:10px">Per-Member Annual Summary</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">${mc}</div></div>
+<div class="card" style="margin-bottom:16px;overflow-x:auto"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:8px">Month-by-Month</div><table><thead><tr><th>Month</th><th>Meals</th><th>Rate</th>${MEMBERS.map(m=>`<th style="color:${MC[m]}">${m}</th>`).join("")}</tr></thead><tbody>${mt2}</tbody></table></div>
+${tf.length?`<div class="card"><div style="font-size:12px;color:#8b949e;font-weight:600;margin-bottom:10px">🍱 Most Served This Year</div><div style="display:flex;flex-wrap:wrap;gap:8px">${fr}</div></div>`:""}`;
+}
+
+// ── Global handlers ───────────────────────────────────────────────────────
+const W={
+  su:u=>{CU=u;localStorage.setItem("mess_user",u);render();toast(`Welcome, ${u}!`);},
+  st:t=>{TAB=t;rTabs();rContent();},
+  gm:(y,m)=>{VY=y;VM=m;TAB="statement";render();},
+  tc:d=>togClosed(d),
+  sm:(d,m,v)=>setMeal(d,m,v),
+  ac:()=>{
+    const m=document.getElementById("gcm").value;
+    const f=document.getElementById("gcf").value;const t2=document.getElementById("gct").value;
+    const a=Number(document.getElementById("gca").value);
+    if(!a){toast("Enter an amount");return;}
+    addC(m,parseInt(f.split("-")[2]),parseInt(t2.split("-")[2]),a);
+    document.getElementById("gca").value="";
+  },
+  rc:(m,id)=>remC(m,id),
+  ae:()=>{
+    const p=document.getElementById("ep").value;
+    const a=Number(document.getElementById("ea").value);
+    const pb=document.getElementById("epb").value;
+    const st=document.getElementById("est").value;
+    if(!p||!a){toast("Fill in fields");return;}
+    addE(p,a,pb,st);
+    document.getElementById("ep").value="";document.getElementById("ea").value="";
+  },
+  re:id=>remE(id),
+  ue:(id,f,v)=>updE(id,f,v),
+  ss2:(m,v)=>setSt(m,v),
+  op:d=>{PD=d;rContent();},
+  cp2:()=>{PD=null;rContent();},
+  tf:(d,f)=>togFood(d,f),
+  ef:f=>exFood(f),
+  rf:f=>reFood(f),
+  anf:d=>{const n=document.getElementById("nfi").value;const t=document.getElementById("nft").value;addFood(n,t);},
+  wa:()=>{const d=gmd();copyText(waText(calc(d,VY,VM),VM,VY,d.settlements||{}));},
+  wam:k=>{const p=k.split("_");const d=AD[k];if(!d)return;copyText(waText(calc(d,Number(p[0]),Number(p[1])),Number(p[1]),Number(p[0]),d.settlements||{}));},
+  pdf:()=>downloadPDF(),
+  showUP:()=>{
+    const o=document.createElement("div");o.className="ov";o.id="uov";
+    o.innerHTML=`<div class="mo"><div style="color:#8b949e;font-size:13px;margin-bottom:14px">Switch user</div>${MEMBERS.map(m=>`<button onclick="W.su('${m}');document.getElementById('uov').remove()" style="display:block;width:100%;padding:12px 16px;margin-bottom:8px;background:${MB[m]};border:1px solid ${MC[m]}55;border-radius:8px;color:${MC[m]};font-size:14px;font-weight:600;cursor:pointer;text-align:left">${m}</button>`).join("")}<button onclick="document.getElementById('uov').remove()" style="display:block;width:100%;padding:10px;background:transparent;border:1px solid #30363d;border-radius:8px;color:#8b949e;cursor:pointer">Cancel</button></div>`;
+    document.body.appendChild(o);
+  },
+  showLC:()=>{
+    const o=document.createElement("div");o.className="ov";o.id="lov";
+    o.innerHTML=`<div class="mo" style="border-color:#f85149"><div style="font-size:16px;font-weight:700;color:#f85149;margin-bottom:10px">🔒 Lock ${MN[VM]}?</div><div style="color:#8b949e;font-size:13px;margin-bottom:20px">Makes ${MN[VM]} ${VY} read-only. Cannot be undone.</div><div style="display:flex;gap:10px"><button onclick="doLock();document.getElementById('lov').remove()" style="flex:1;padding:10px;background:#f85149;border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Yes, Lock</button><button onclick="document.getElementById('lov').remove()" style="flex:1;padding:10px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#e6edf3;cursor:pointer">Cancel</button></div></div>`;
+    document.body.appendChild(o);
+  },
+};
+window.W=W;
+window.doLock=doLock;
+
+render();
+subscribe();
+</script>
+</body>
+</html>
